@@ -1,0 +1,1045 @@
+<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
+  <variables>
+    <variable>Min_Stake</variable>
+    <variable>Max_Stake</variable>
+    <variable>Martingale_Multiplier</variable>
+    <variable>Stop_Balance_Limit</variable>
+    <variable>Current_Stake</variable>
+    <variable>Trade_Duration</variable>
+    <variable>Last_Candle_Time</variable>
+    <variable>Current_Candle_Time</variable>
+    <variable>Close_Price</variable>
+    <variable>EMA_Fast_9</variable>
+    <variable>EMA_Slow_21</variable>
+    <variable>RSI_14</variable>
+    <variable>BB_Upper</variable>
+    <variable>BB_Lower</variable>
+    <variable>Trade_Signal</variable>
+    <variable>Current_Balance</variable>
+  </variables>
+
+  <block type="trade_definition" id="trade_def_main" deletable="false" x="0" y="0">
+    <statement name="TRADE_OPTIONS">
+      <block type="trade_definition_market" id="td_mkt" deletable="false" movable="false">
+        <field name="MARKET_LIST">synthetic_index</field>
+        <field name="SUBMARKET_LIST">random_index</field>
+        <field name="SYMBOL_LIST">1HZ100V</field>
+        <next>
+          <block type="trade_definition_tradetype" id="td_tt" deletable="false" movable="false">
+            <field name="TRADETYPECAT_LIST">callput</field>
+            <field name="TRADETYPE_LIST">callput</field>
+            <next>
+              <block type="trade_definition_contracttype" id="td_ct" deletable="false" movable="false">
+                <field name="TYPE_LIST">both</field>
+                <next>
+                  <block type="trade_definition_candleinterval" id="td_ci" deletable="false" movable="false">
+                    <field name="CANDLEINTERVAL_LIST">60</field>
+                    <next>
+                      <block type="trade_definition_restartbuysell" id="td_rb" deletable="false" movable="false">
+                        <field name="TIME_MACHINE_ENABLED">FALSE</field>
+                        <next>
+                          <block type="trade_definition_restartonerror" id="td_re" deletable="false" movable="false">
+                            <field name="RESTARTONERROR">TRUE</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+
+    <statement name="INITIALIZATION">
+      <block type="variables_set" id="set_min">
+        <field name="VAR">Min_Stake</field>
+        <value name="VALUE">
+          <block type="math_number" id="n_min">
+            <field name="NUM">1</field>
+          </block>
+        </value>
+        <next>
+          <block type="variables_set" id="set_max">
+            <field name="VAR">Max_Stake</field>
+            <value name="VALUE">
+              <block type="math_number" id="n_max">
+                <field name="NUM">10</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="set_mart">
+                <field name="VAR">Martingale_Multiplier</field>
+                <value name="VALUE">
+                  <block type="math_number" id="n_mart">
+                    <field name="NUM">2.15</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="set_stop">
+                    <field name="VAR">Stop_Balance_Limit</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="n_stop">
+                        <field name="NUM">0</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="set_curr">
+                        <field name="VAR">Current_Stake</field>
+                        <value name="VALUE">
+                          <block type="variables_get" id="g_min_init">
+                            <field name="VAR">Min_Stake</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="variables_set" id="set_dur_init">
+                            <field name="VAR">Trade_Duration</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="n_dur_init">
+                                <field name="NUM">3</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="set_last_init">
+                                <field name="VAR">Last_Candle_Time</field>
+                                <value name="VALUE">
+                                  <block type="math_number" id="n_last_init">
+                                    <field name="NUM">0</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+
+    <statement name="SUBMARKET">
+      <block type="trade_definition_tradeoptions" id="td_opts">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" has_first_barrier="false" has_second_barrier="false" has_prediction="false"></mutation>
+        <field name="DURATIONTYPE_LIST">m</field>
+        <value name="DURATION">
+          <shadow type="math_number" id="sh_dur">
+            <field name="NUM">3</field>
+          </shadow>
+          <block type="variables_get" id="g_dur_opt">
+            <field name="VAR">Trade_Duration</field>
+          </block>
+        </value>
+        <value name="AMOUNT">
+          <shadow type="math_number" id="sh_amt">
+            <field name="NUM">1</field>
+          </shadow>
+          <block type="variables_get" id="g_stake_opt">
+            <field name="VAR">Current_Stake</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
+
+  <block type="before_purchase" id="before_purch_main" deletable="false" x="0" y="620">
+    <statement name="BEFOREPURCHASE_STACK">
+      <block type="variables_set" id="set_cur_c">
+        <field name="VAR">Current_Candle_Time</field>
+        <value name="VALUE">
+          <block type="read_ohlc" id="r_ep_cur">
+            <field name="OHLCFIELD_LIST">epoch</field>
+            <field name="CANDLEINTERVAL_LIST">default</field>
+            <value name="CANDLEINDEX">
+              <shadow type="math_number" id="sh_idx1">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+        <next>
+          <block type="controls_if" id="if_new_c">
+            <value name="IF0">
+              <block type="logic_compare" id="cmp_c">
+                <field name="OP">NEQ</field>
+                <value name="A">
+                  <block type="variables_get" id="g_cur_c1">
+                    <field name="VAR">Current_Candle_Time</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="variables_get" id="g_last_c1">
+                    <field name="VAR">Last_Candle_Time</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="variables_set" id="upd_last_c">
+                <field name="VAR">Last_Candle_Time</field>
+                <value name="VALUE">
+                  <block type="variables_get" id="g_cur_c2">
+                    <field name="VAR">Current_Candle_Time</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="rst_sig">
+                    <field name="VAR">Trade_Signal</field>
+                    <value name="VALUE">
+                      <block type="text" id="t_none">
+                        <field name="TEXT">NONE</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="set_cl">
+                        <field name="VAR">Close_Price</field>
+                        <value name="VALUE">
+                          <block type="read_ohlc" id="r_cl_2">
+                            <field name="OHLCFIELD_LIST">close</field>
+                            <field name="CANDLEINTERVAL_LIST">default</field>
+                            <value name="CANDLEINDEX">
+                              <shadow type="math_number" id="sh_idx2">
+                                <field name="NUM">2</field>
+                              </shadow>
+                            </value>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="ema_statement" id="ema9">
+                            <field name="VARIABLE">EMA_Fast_9</field>
+                            <value name="INPUT">
+                              <block type="ohlc_values" id="ov_ema9">
+                                <field name="OHLCFIELD_LIST">close</field>
+                                <field name="CANDLEINTERVAL_LIST">default</field>
+                              </block>
+                            </value>
+                            <value name="PERIOD">
+                              <shadow type="math_number" id="sh_p_ema9">
+                                <field name="NUM">9</field>
+                              </shadow>
+                            </value>
+                            <next>
+                              <block type="ema_statement" id="ema21">
+                                <field name="VARIABLE">EMA_Slow_21</field>
+                                <value name="INPUT">
+                                  <block type="ohlc_values" id="ov_ema21">
+                                    <field name="OHLCFIELD_LIST">close</field>
+                                    <field name="CANDLEINTERVAL_LIST">default</field>
+                                  </block>
+                                </value>
+                                <value name="PERIOD">
+                                  <shadow type="math_number" id="sh_p_ema21">
+                                    <field name="NUM">21</field>
+                                  </shadow>
+                                </value>
+                                <next>
+                                  <block type="rsi_statement" id="rsi14">
+                                    <field name="VARIABLE">RSI_14</field>
+                                    <value name="INPUT">
+                                      <block type="ohlc_values" id="ov_rsi14">
+                                        <field name="OHLCFIELD_LIST">close</field>
+                                        <field name="CANDLEINTERVAL_LIST">default</field>
+                                      </block>
+                                    </value>
+                                    <value name="PERIOD">
+                                      <shadow type="math_number" id="sh_p_rsi14">
+                                        <field name="NUM">14</field>
+                                      </shadow>
+                                    </value>
+                                    <next>
+                                      <block type="bb_statement" id="bb_up">
+                                        <field name="VARIABLE">BB_Upper</field>
+                                        <field name="BBRESULT_LIST">1</field>
+                                        <value name="INPUT">
+                                          <block type="ohlc_values" id="ov_bbu">
+                                            <field name="OHLCFIELD_LIST">close</field>
+                                            <field name="CANDLEINTERVAL_LIST">default</field>
+                                          </block>
+                                        </value>
+                                        <value name="PERIOD">
+                                          <shadow type="math_number" id="sh_p_bbu">
+                                            <field name="NUM">20</field>
+                                          </shadow>
+                                        </value>
+                                        <value name="UPMULTIPLIER">
+                                          <shadow type="math_number" id="sh_u_bbu">
+                                            <field name="NUM">2</field>
+                                          </shadow>
+                                        </value>
+                                        <value name="DOWNMULTIPLIER">
+                                          <shadow type="math_number" id="sh_d_bbu">
+                                            <field name="NUM">2</field>
+                                          </shadow>
+                                        </value>
+                                        <next>
+                                          <block type="bb_statement" id="bb_lo">
+                                            <field name="VARIABLE">BB_Lower</field>
+                                            <field name="BBRESULT_LIST">2</field>
+                                            <value name="INPUT">
+                                              <block type="ohlc_values" id="ov_bbl">
+                                                <field name="OHLCFIELD_LIST">close</field>
+                                                <field name="CANDLEINTERVAL_LIST">default</field>
+                                              </block>
+                                            </value>
+                                            <value name="PERIOD">
+                                              <shadow type="math_number" id="sh_p_bbl">
+                                                <field name="NUM">20</field>
+                                              </shadow>
+                                            </value>
+                                            <value name="UPMULTIPLIER">
+                                              <shadow type="math_number" id="sh_u_bbl">
+                                                <field name="NUM">2</field>
+                                              </shadow>
+                                            </value>
+                                            <value name="DOWNMULTIPLIER">
+                                              <shadow type="math_number" id="sh_d_bbl">
+                                                <field name="NUM">2</field>
+                                              </shadow>
+                                            </value>
+                                            <next>
+                                              <block type="controls_if" id="if_setups">
+                                                <mutation xmlns="http://www.w3.org/1999/xhtml" elseif="5"></mutation>
+                                                <value name="IF0">
+                                                  <block type="logic_operation" id="s1_a1">
+                                                    <field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="s1_c1">
+                                                        <field name="OP">GT</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="g_s1_cl">
+                                                            <field name="VAR">Close_Price</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="variables_get" id="g_s1_bbu">
+                                                            <field name="VAR">BB_Upper</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_operation" id="s1_a2">
+                                                        <field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_compare" id="s1_c2">
+                                                            <field name="OP">GT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s1_e9">
+                                                                <field name="VAR">EMA_Fast_9</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="variables_get" id="g_s1_e21">
+                                                                <field name="VAR">EMA_Slow_21</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="logic_compare" id="s1_c3">
+                                                            <field name="OP">GT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s1_r">
+                                                                <field name="VAR">RSI_14</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="math_number" id="n_s1_r">
+                                                                <field name="NUM">65</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <statement name="DO0">
+                                                  <block type="variables_set" id="set_d1">
+                                                    <field name="VAR">Trade_Duration</field>
+                                                    <value name="VALUE">
+                                                      <block type="math_number" id="n_d1">
+                                                        <field name="NUM">2</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="variables_set" id="set_sg1">
+                                                        <field name="VAR">Trade_Signal</field>
+                                                        <value name="VALUE">
+                                                          <block type="text" id="t_sg1">
+                                                            <field name="TEXT">CALL</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </statement>
+
+                                                <value name="IF1">
+                                                  <block type="logic_operation" id="s2_a1">
+                                                    <field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="s2_c1">
+                                                        <field name="OP">LT</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="g_s2_cl">
+                                                            <field name="VAR">Close_Price</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="variables_get" id="g_s2_bbl">
+                                                            <field name="VAR">BB_Lower</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_operation" id="s2_a2">
+                                                        <field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_compare" id="s2_c2">
+                                                            <field name="OP">LT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s2_e9">
+                                                                <field name="VAR">EMA_Fast_9</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="variables_get" id="g_s2_e21">
+                                                                <field name="VAR">EMA_Slow_21</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="logic_compare" id="s2_c3">
+                                                            <field name="OP">LT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s2_r">
+                                                                <field name="VAR">RSI_14</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="math_number" id="n_s2_r">
+                                                                <field name="NUM">35</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <statement name="DO1">
+                                                  <block type="variables_set" id="set_d2">
+                                                    <field name="VAR">Trade_Duration</field>
+                                                    <value name="VALUE">
+                                                      <block type="math_number" id="n_d2">
+                                                        <field name="NUM">2</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="variables_set" id="set_sg2">
+                                                        <field name="VAR">Trade_Signal</field>
+                                                        <value name="VALUE">
+                                                          <block type="text" id="t_sg2">
+                                                            <field name="TEXT">PUT</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </statement>
+
+                                                <value name="IF2">
+                                                  <block type="logic_operation" id="s3_a1">
+                                                    <field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="s3_c1">
+                                                        <field name="OP">LTE</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="g_s3_cl">
+                                                            <field name="VAR">Close_Price</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="variables_get" id="g_s3_bbl">
+                                                            <field name="VAR">BB_Lower</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_compare" id="s3_c2">
+                                                        <field name="OP">LT</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="g_s3_r">
+                                                            <field name="VAR">RSI_14</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="math_number" id="n_s3_r">
+                                                            <field name="NUM">28</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <statement name="DO2">
+                                                  <block type="variables_set" id="set_d3">
+                                                    <field name="VAR">Trade_Duration</field>
+                                                    <value name="VALUE">
+                                                      <block type="math_number" id="n_d3">
+                                                        <field name="NUM">6</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="variables_set" id="set_sg3">
+                                                        <field name="VAR">Trade_Signal</field>
+                                                        <value name="VALUE">
+                                                          <block type="text" id="t_sg3">
+                                                            <field name="TEXT">CALL</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </statement>
+
+                                                <value name="IF3">
+                                                  <block type="logic_operation" id="s4_a1">
+                                                    <field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="s4_c1">
+                                                        <field name="OP">GTE</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="g_s4_cl">
+                                                            <field name="VAR">Close_Price</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="variables_get" id="g_s4_bbu">
+                                                            <field name="VAR">BB_Upper</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_compare" id="s4_c2">
+                                                        <field name="OP">GT</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="g_s4_r">
+                                                            <field name="VAR">RSI_14</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="math_number" id="n_s4_r">
+                                                            <field name="NUM">72</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <statement name="DO3">
+                                                  <block type="variables_set" id="set_d4">
+                                                    <field name="VAR">Trade_Duration</field>
+                                                    <value name="VALUE">
+                                                      <block type="math_number" id="n_d4">
+                                                        <field name="NUM">6</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="variables_set" id="set_sg4">
+                                                        <field name="VAR">Trade_Signal</field>
+                                                        <value name="VALUE">
+                                                          <block type="text" id="t_sg4">
+                                                            <field name="TEXT">PUT</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </statement>
+
+                                                <value name="IF4">
+                                                  <block type="logic_operation" id="s5_a1">
+                                                    <field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_operation" id="s5_a2">
+                                                        <field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_compare" id="s5_c1">
+                                                            <field name="OP">GT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s5_e9">
+                                                                <field name="VAR">EMA_Fast_9</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="variables_get" id="g_s5_e21">
+                                                                <field name="VAR">EMA_Slow_21</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="logic_compare" id="s5_c2">
+                                                            <field name="OP">GT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s5_cl">
+                                                                <field name="VAR">Close_Price</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="variables_get" id="g_s5_e9b">
+                                                                <field name="VAR">EMA_Fast_9</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_operation" id="s5_a3">
+                                                        <field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_compare" id="s5_c3">
+                                                            <field name="OP">GT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s5_r1">
+                                                                <field name="VAR">RSI_14</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="math_number" id="n_s5_r1">
+                                                                <field name="NUM">53</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="logic_compare" id="s5_c4">
+                                                            <field name="OP">LTE</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s5_r2">
+                                                                <field name="VAR">RSI_14</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="math_number" id="n_s5_r2">
+                                                                <field name="NUM">65</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <statement name="DO4">
+                                                  <block type="variables_set" id="set_d5">
+                                                    <field name="VAR">Trade_Duration</field>
+                                                    <value name="VALUE">
+                                                      <block type="math_number" id="n_d5">
+                                                        <field name="NUM">3</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="variables_set" id="set_sg5">
+                                                        <field name="VAR">Trade_Signal</field>
+                                                        <value name="VALUE">
+                                                          <block type="text" id="t_sg5">
+                                                            <field name="TEXT">CALL</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </statement>
+
+                                                <value name="IF5">
+                                                  <block type="logic_operation" id="s6_a1">
+                                                    <field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_operation" id="s6_a2">
+                                                        <field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_compare" id="s6_c1">
+                                                            <field name="OP">LT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s6_e9">
+                                                                <field name="VAR">EMA_Fast_9</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="variables_get" id="g_s6_e21">
+                                                                <field name="VAR">EMA_Slow_21</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="logic_compare" id="s6_c2">
+                                                            <field name="OP">LT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s6_cl">
+                                                                <field name="VAR">Close_Price</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="variables_get" id="g_s6_e9b">
+                                                                <field name="VAR">EMA_Fast_9</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_operation" id="s6_a3">
+                                                        <field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_compare" id="s6_c3">
+                                                            <field name="OP">LT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s6_r1">
+                                                                <field name="VAR">RSI_14</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="math_number" id="n_s6_r1">
+                                                                <field name="NUM">47</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="logic_compare" id="s6_c4">
+                                                            <field name="OP">GTE</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="g_s6_r2">
+                                                                <field name="VAR">RSI_14</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="math_number" id="n_s6_r2">
+                                                                <field name="NUM">35</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <statement name="DO5">
+                                                  <block type="variables_set" id="set_d6">
+                                                    <field name="VAR">Trade_Duration</field>
+                                                    <value name="VALUE">
+                                                      <block type="math_number" id="n_d6">
+                                                        <field name="NUM">3</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="variables_set" id="set_sg6">
+                                                        <field name="VAR">Trade_Signal</field>
+                                                        <value name="VALUE">
+                                                          <block type="text" id="t_sg6">
+                                                            <field name="TEXT">PUT</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </statement>
+
+                                                <next>
+                                                  <block type="controls_if" id="if_buy_sig">
+                                                    <mutation xmlns="http://www.w3.org/1999/xhtml" elseif="1"></mutation>
+                                                    <value name="IF0">
+                                                      <block type="logic_compare" id="cmp_buy_call">
+                                                        <field name="OP">EQ</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="g_sig_c">
+                                                            <field name="VAR">Trade_Signal</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="text" id="t_buy_call">
+                                                            <field name="TEXT">CALL</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <statement name="DO0">
+                                                      <block type="purchase" id="p_call">
+                                                        <field name="PURCHASE_LIST">CALL</field>
+                                                      </block>
+                                                    </statement>
+                                                    <value name="IF1">
+                                                      <block type="logic_compare" id="cmp_buy_put">
+                                                        <field name="OP">EQ</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="g_sig_p">
+                                                            <field name="VAR">Trade_Signal</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="text" id="t_buy_put">
+                                                            <field name="TEXT">PUT</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <statement name="DO1">
+                                                      <block type="purchase" id="p_put">
+                                                        <field name="PURCHASE_LIST">PUT</field>
+                                                      </block>
+                                                    </statement>
+                                                  </block>
+                                                </next>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+
+  <block type="during_purchase" id="during_purch_main" deletable="false" x="0" y="1720"></block>
+
+  <block type="after_purchase" id="after_purch_main" deletable="false" x="0" y="1920">
+    <statement name="AFTERPURCHASE_STACK">
+      <block type="variables_set" id="set_bal_ap">
+        <field name="VAR">Current_Balance</field>
+        <value name="VALUE">
+          <block type="balance" id="b_num">
+            <field name="BALANCE_TYPE">NUM</field>
+          </block>
+        </value>
+        <next>
+          <block type="controls_if" id="if_res_wl">
+            <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+            <value name="IF0">
+              <block type="contract_check_result" id="chk_w">
+                <field name="CHECK_RESULT">win</field>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="variables_set" id="set_w_min">
+                <field name="VAR">Current_Stake</field>
+                <value name="VALUE">
+                  <block type="variables_get" id="g_w_min">
+                    <field name="VAR">Min_Stake</field>
+                  </block>
+                </value>
+              </block>
+            </statement>
+            <statement name="ELSE">
+              <block type="variables_set" id="set_l_mult">
+                <field name="VAR">Current_Stake</field>
+                <value name="VALUE">
+                  <block type="math_arithmetic" id="op_mult">
+                    <field name="OP">MULTIPLY</field>
+                    <value name="A">
+                      <block type="variables_get" id="g_l_cur">
+                        <field name="VAR">Current_Stake</field>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="variables_get" id="g_l_mart">
+                        <field name="VAR">Martingale_Multiplier</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="set_rnd">
+                    <field name="VAR">Current_Stake</field>
+                    <value name="VALUE">
+                      <block type="math_arithmetic" id="op_div100">
+                        <field name="OP">DIVIDE</field>
+                        <value name="A">
+                          <block type="math_round" id="op_rnd">
+                            <field name="OP">ROUND</field>
+                            <value name="NUM">
+                              <block type="math_arithmetic" id="op_mul100">
+                                <field name="OP">MULTIPLY</field>
+                                <value name="A">
+                                  <block type="variables_get" id="g_rnd_cur">
+                                    <field name="VAR">Current_Stake</field>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <block type="math_number" id="n_100a">
+                                    <field name="NUM">100</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="math_number" id="n_100b">
+                            <field name="NUM">100</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="controls_if" id="if_cap_rst">
+                        <value name="IF0">
+                          <block type="logic_operation" id="or_cap">
+                            <field name="OP">OR</field>
+                            <value name="A">
+                              <block type="logic_compare" id="cmp_gt_max">
+                                <field name="OP">GT</field>
+                                <value name="A">
+                                  <block type="variables_get" id="g_c1_cur">
+                                    <field name="VAR">Current_Stake</field>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <block type="variables_get" id="g_c1_max">
+                                    <field name="VAR">Max_Stake</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="logic_compare" id="cmp_gt_bal">
+                                <field name="OP">GT</field>
+                                <value name="A">
+                                  <block type="variables_get" id="g_c2_cur">
+                                    <field name="VAR">Current_Stake</field>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <block type="variables_get" id="g_c2_bal">
+                                    <field name="VAR">Current_Balance</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <statement name="DO0">
+                          <block type="variables_set" id="set_cap_min">
+                            <field name="VAR">Current_Stake</field>
+                            <value name="VALUE">
+                              <block type="variables_get" id="g_cap_min">
+                                <field name="VAR">Min_Stake</field>
+                              </block>
+                            </value>
+                          </block>
+                        </statement>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="controls_if" id="if_stop_loop">
+                <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+                <value name="IF0">
+                  <block type="logic_operation" id="or_stop_all">
+                    <field name="OP">OR</field>
+                    <value name="A">
+                      <block type="logic_operation" id="and_stop_val">
+                        <field name="OP">AND</field>
+                        <value name="A">
+                          <block type="logic_compare" id="cmp_s_gt0">
+                            <field name="OP">GT</field>
+                            <value name="A">
+                              <block type="variables_get" id="g_s_lim1">
+                                <field name="VAR">Stop_Balance_Limit</field>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="math_number" id="n_s_0">
+                                <field name="NUM">0</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="logic_compare" id="cmp_s_lte">
+                            <field name="OP">LTE</field>
+                            <value name="A">
+                              <block type="variables_get" id="g_s_bal">
+                                <field name="VAR">Current_Balance</field>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="variables_get" id="g_s_lim2">
+                                <field name="VAR">Stop_Balance_Limit</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="logic_compare" id="cmp_s_min">
+                        <field name="OP">LT</field>
+                        <value name="A">
+                          <block type="variables_get" id="g_s_bal2">
+                            <field name="VAR">Current_Balance</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="variables_get" id="g_s_min2">
+                            <field name="VAR">Min_Stake</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="notify" id="ntf_stop">
+                    <field name="NOTIFICATION_TYPE">warn</field>
+                    <field name="NOTIFICATION_SOUND">silent</field>
+                    <value name="MESSAGE">
+                      <shadow type="text" id="t_stop_m">
+                        <field name="TEXT">Бот остановлен: достигнут лимит баланса или не хватает средств на минимальную ставку.</field>
+                      </shadow>
+                    </value>
+                  </block>
+                </statement>
+                <statement name="ELSE">
+                  <block type="trade_again" id="tr_again_main"></block>
+                </statement>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+</xml>
